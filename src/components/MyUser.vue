@@ -50,11 +50,13 @@
 <script lang="ts">
 import Repository from "@/types/repository";
 import User from "@/types/user";
-import { defineComponent, PropType } from "vue";
+import { defineComponent, PropType, computed, reactive, toRefs } from "vue";
 
 interface ComponentData {
   hasLiked: boolean;
   likedRepositories: Array<number>;
+  name: string;
+  repositoriesCount: number;
 }
 
 export default defineComponent({
@@ -68,38 +70,40 @@ export default defineComponent({
       required: true,
     },
   },
-  data(): ComponentData {
-    return {
+  setup(props) {
+    const state: ComponentData = reactive({
       hasLiked: false,
       likedRepositories: [],
-    };
-  },
-  computed: {
-    repositoriesCount(): number {
-      return this.user.repos.public + this.user.repos.private;
-    },
-    name(): string {
-      return `${this.user.first_name} ${this.user.last_name}`;
-    },
-  },
-  methods: {
-    like(id: number): void {
-      if (!this.likedRepositories.includes(id)) {
-        this.hasLiked = true;
-        this.likedRepositories.push(id);
+      name: computed(() => `${props.user.first_name} ${props.user.last_name}`),
+      repositoriesCount: computed(
+        () => props.user.repos.public + props.user.repos.private
+      ),
+    });
+
+    function like(id: number) {
+      if (!state.likedRepositories.includes(id)) {
+        state.hasLiked = true;
+        state.likedRepositories.push(id);
       } else {
-        const index = this.likedRepositories.indexOf(id);
+        const index = state.likedRepositories.indexOf(id);
         if (index > -1) {
-          this.likedRepositories.splice(index, 1);
+          state.likedRepositories.splice(index, 1);
         }
-        if (!this.likedRepositories.length) {
-          this.hasLiked = false;
+        if (!state.likedRepositories.length) {
+          state.hasLiked = false;
         }
       }
-    },
-    isLikedRepo(id: number): boolean {
-      return this.likedRepositories.includes(id);
-    },
+    }
+
+    function isLikedRepo(id: number) {
+      return state.likedRepositories.includes(id);
+    }
+
+    return {
+      ...toRefs(state),
+      like,
+      isLikedRepo,
+    };
   },
 });
 </script>
