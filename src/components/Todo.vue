@@ -23,12 +23,47 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { ref, computed, watch, watchEffect, defineComponent } from "vue";
 
 export default defineComponent({
-  setup() {
-    const todo = ref();
+  props: {
+    title: {
+      type: String,
+      required: true,
+    },
+    initInput: {
+      type: String,
+      required: true,
+    },
+  },
+  setup(props) {
+    const vTitle = computed(() => "-" + props.title + "-");
+    const todo = ref(props.initInput);
+    const todoLength = ref(0);
     const items = ref(["This", "is"]);
+    const itemsQuantity = computed(() => items.value.length);
+    const append = ref("");
+
+    watch(items.value, (items) => {
+      console.log("watch items.value");
+      append.value = "";
+      items.forEach((item) => {
+        append.value += item + " ";
+      });
+    });
+
+    watch(
+      () => todo.value.length,
+      (length) => {
+        todoLength.value = length;
+      }
+    );
+
+    watchEffect(() => {
+      if (todo.value.length > 10) {
+        alert(`Your current todo '${todo.value}' is getting preeeetty long.`);
+      }
+    });
 
     const add = () => {
       if (todo.value) {
@@ -42,8 +77,12 @@ export default defineComponent({
     };
 
     return {
+      vTitle,
       todo,
+      todoLength,
       items,
+      itemsQuantity,
+      append,
       add,
       remove,
     };
